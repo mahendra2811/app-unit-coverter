@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "unit-converter",
+    "name": "Unit Converter",
     "slug": "unit-converter",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -8,16 +8,19 @@
     "scheme": "unitconverter",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "description": "Simple, offline unit converter for length, weight, temperature, area, and volume.",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.unitconverter.app"
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#007AFF",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
+      "package": "com.unitconverter.app",
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
     },
