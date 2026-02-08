@@ -11,7 +11,7 @@
     "description": "Simple, offline unit converter for length, weight, temperature, area, and volume.",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.unitconverter.app"
+      "bundleIdentifier": "com.mahi0092.unitconverter"
     },
     "android": {
       "adaptiveIcon": {
@@ -20,7 +20,7 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "package": "com.unitconverter.app",
+      "package": "com.mahi0092.unitconverter",
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
     },
@@ -46,6 +46,13 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "397b79de-f3ac-4f50-ba13-666ad2f592c9"
+      }
+    },
+    "owner": "mahi0092"
   }
 }
