@@ -1,38 +1,31 @@
 import React from 'react';
-import { 
-  View, 
-  FlatList, 
-  TouchableOpacity, 
-  StyleSheet, 
+import {
+  View,
+  FlatList,
+  TouchableOpacity,
+  StyleSheet,
   SafeAreaView,
   StatusBar,
-  Animated,
-  Dimensions
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { ThemedText } from '@/components/themed-text';
-import { AppCard } from '../src/components/common/AppCard';
 import { Icon } from '../src/components/common/Icon';
 import { CONVERSION_CATEGORIES } from '../src/constants/units';
-import { 
-  Colors, 
-  Spacing, 
-  FontSizes, 
-  FontWeights, 
+import {
+  Colors,
+  Spacing,
+  FontSizes,
+  FontWeights,
   BorderRadius,
   Shadows,
-  getCategoryColor 
+  getCategoryColor
 } from '../src/constants/colors';
-import { 
-  SCREEN_DIMENSIONS, 
-  getGridColumns, 
+import {
+  getGridColumns,
   responsiveSpacing,
-  responsiveFontSize 
 } from '../src/constants/responsive';
 import { ConversionCategory } from '../src/types/unit.types';
-
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -50,19 +43,18 @@ export default function HomeScreen() {
     });
   };
 
-  const renderCategoryItem = ({ item, index }: { item: ConversionCategory; index: number }) => {
+  const renderCategoryItem = ({ item }: { item: ConversionCategory }) => {
     const categoryColor = getCategoryColor(item.id, colorScheme ?? 'light');
-    const itemWidth = (SCREEN_WIDTH - (Spacing.lg * 2) - (Spacing.md * (gridColumns - 1))) / gridColumns;
-    
+
     return (
       <TouchableOpacity
-        style={[styles.categoryItem, { width: itemWidth }]}
+        style={styles.categoryItem}
         onPress={() => handleCategoryPress(item)}
         activeOpacity={0.8}
       >
-        <Animated.View style={[
+        <View style={[
           styles.categoryCard,
-          { 
+          {
             backgroundColor: colors.surface,
             borderColor: colors.border,
           },
@@ -71,78 +63,64 @@ export default function HomeScreen() {
           {/* Icon Container */}
           <View style={[
             styles.iconContainer,
-            { 
-              backgroundColor: categoryColor + '15',
-              borderColor: categoryColor + '30',
+            {
+              backgroundColor: categoryColor + '18',
+              borderColor: categoryColor + '35',
             }
           ]}>
             <Icon
               family={item.icon.family}
               name={item.icon.name}
-              size={responsiveSpacing(32)}
+              size={responsiveSpacing(28)}
               color={categoryColor}
             />
           </View>
 
           {/* Content */}
           <View style={styles.categoryContent}>
-            <ThemedText style={[
-              styles.categoryTitle,
-              { color: colors.text }
-            ]}>
+            <ThemedText style={[styles.categoryTitle, { color: colors.text }]}>
               {item.name}
             </ThemedText>
-            
-            <ThemedText style={[
-              styles.categoryDescription,
-              { color: colors.textSecondary }
-            ]}>
+            <ThemedText style={[styles.categoryDescription, { color: colors.textSecondary }]}>
               {item.units.length} units
             </ThemedText>
           </View>
 
           {/* Accent Line */}
-          <View style={[
-            styles.accentLine,
-            { backgroundColor: categoryColor }
-          ]} />
-        </Animated.View>
+          <View style={[styles.accentLine, { backgroundColor: categoryColor }]} />
+        </View>
       </TouchableOpacity>
     );
   };
 
   return (
     <>
-      <StatusBar 
+      <StatusBar
         barStyle={colorScheme === 'dark' ? 'light-content' : 'dark-content'}
         backgroundColor={colors.background}
       />
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
         {/* Header */}
         <View style={styles.header}>
-          <View style={styles.headerContent}>
-            <ThemedText style={[styles.title, { color: colors.text }]}>
-              Unit Converter
-            </ThemedText>
-            <ThemedText style={[styles.subtitle, { color: colors.textSecondary }]}>
-              Convert between different units of measurement
-            </ThemedText>
-          </View>
+          <ThemedText style={[styles.title, { color: colors.text }]}>
+            Unit Converter
+          </ThemedText>
+          <ThemedText style={[styles.subtitle, { color: colors.textSecondary }]}>
+            Pick a category to start converting
+          </ThemedText>
         </View>
 
         {/* Categories Grid */}
-        <View style={styles.content}>
-          <FlatList
-            data={CONVERSION_CATEGORIES}
-            renderItem={renderCategoryItem}
-            keyExtractor={(item) => item.id}
-            numColumns={gridColumns}
-            contentContainerStyle={styles.listContainer}
-            showsVerticalScrollIndicator={false}
-            scrollEventThrottle={16}
-            key={gridColumns} // Force re-render when columns change
-          />
-        </View>
+        <FlatList
+          data={CONVERSION_CATEGORIES}
+          renderItem={renderCategoryItem}
+          keyExtractor={(item) => item.id}
+          numColumns={gridColumns}
+          key={gridColumns}
+          columnWrapperStyle={gridColumns > 1 ? styles.row : undefined}
+          contentContainerStyle={styles.listContainer}
+          showsVerticalScrollIndicator={false}
+        />
       </SafeAreaView>
     </>
   );
@@ -153,70 +131,64 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    paddingTop: responsiveSpacing(20),
+    paddingTop: responsiveSpacing(16),
     paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.xl,
-  },
-  headerContent: {
+    paddingBottom: Spacing.lg,
     alignItems: 'center',
   },
   title: {
-    fontSize: FontSizes.xxxxl,
+    fontSize: FontSizes.xxxl,
     fontWeight: FontWeights.bold,
     textAlign: 'center',
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.xs,
     letterSpacing: -0.5,
   },
   subtitle: {
-    fontSize: FontSizes.md,
+    fontSize: FontSizes.sm,
     fontWeight: FontWeights.normal,
     textAlign: 'center',
-    lineHeight: FontSizes.md * 1.4,
-    maxWidth: '80%',
   },
-  content: {
-    flex: 1,
+  row: {
     paddingHorizontal: Spacing.lg,
+    gap: Spacing.md,
   },
   listContainer: {
     paddingBottom: Spacing.xl,
+    gap: Spacing.md,
   },
   categoryItem: {
-    marginBottom: Spacing.md,
-    marginRight: Spacing.md,
+    flex: 1,
   },
   categoryCard: {
     borderRadius: BorderRadius.xl,
     borderWidth: 1,
-    padding: Spacing.lg,
+    padding: Spacing.md,
     alignItems: 'center',
-    minHeight: responsiveSpacing(140),
-    justifyContent: 'space-between',
+    minHeight: responsiveSpacing(130),
+    justifyContent: 'center',
     position: 'relative',
     overflow: 'hidden',
+    gap: Spacing.sm,
   },
   iconContainer: {
-    width: responsiveSpacing(64),
-    height: responsiveSpacing(64),
-    borderRadius: BorderRadius.xl,
+    width: responsiveSpacing(52),
+    height: responsiveSpacing(52),
+    borderRadius: BorderRadius.lg,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: Spacing.md,
   },
   categoryContent: {
     alignItems: 'center',
-    flex: 1,
-    justifyContent: 'center',
   },
   categoryTitle: {
-    fontSize: FontSizes.lg,
+    fontSize: FontSizes.md,
     fontWeight: FontWeights.semibold,
     textAlign: 'center',
-    marginBottom: Spacing.xs,
+    marginBottom: 2,
   },
   categoryDescription: {
-    fontSize: FontSizes.sm,
+    fontSize: FontSizes.xs,
     fontWeight: FontWeights.normal,
     textAlign: 'center',
   },

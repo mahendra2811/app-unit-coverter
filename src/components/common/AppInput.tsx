@@ -1,7 +1,16 @@
 import React from 'react';
-import { View, TextInput, Text, StyleSheet, KeyboardTypeOptions, ViewStyle, TextStyle } from 'react-native';
+import {
+  View,
+  TextInput,
+  Text,
+  StyleSheet,
+  KeyboardTypeOptions,
+  ViewStyle,
+  TextStyle,
+  Platform,
+} from 'react-native';
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import { Colors, Spacing, BorderRadius, FontSizes } from '../../constants/colors';
+import { Colors, Spacing, BorderRadius, FontSizes, FontWeights } from '../../constants/colors';
 import { validateNumericInput } from '../../utils/converters';
 
 interface AppInputProps {
@@ -41,52 +50,36 @@ export const AppInput: React.FC<AppInputProps> = ({
     }
   };
 
-  const inputContainerStyle = [
-    styles.inputContainer,
-    {
-      borderColor: error ? colors.error : colors.border,
-      backgroundColor: colors.background,
-    },
-  ];
-
-  const textInputStyle = [
-    styles.textInput,
-    {
-      color: colors.text,
-    },
-    inputStyle,
-  ];
-
-  const labelStyle = [
-    styles.label,
-    {
-      color: colors.text,
-    },
-  ];
-
-  const errorStyle = [
-    styles.error,
-    {
-      color: colors.error,
-    },
-  ];
-
   return (
     <View style={[styles.container, style]}>
-      {label && <Text style={labelStyle}>{label}</Text>}
-      <View style={inputContainerStyle}>
+      {label && (
+        <Text style={[styles.label, { color: colors.textSecondary }]}>
+          {label}
+        </Text>
+      )}
+      <View style={[
+        styles.inputContainer,
+        {
+          borderColor: error ? colors.error : colors.border,
+          backgroundColor: colors.backgroundSecondary,
+        },
+      ]}>
         <TextInput
-          style={textInputStyle}
+          style={[styles.textInput, { color: colors.text }, inputStyle]}
           value={value}
           onChangeText={handleTextChange}
-          placeholder={placeholder}
-          placeholderTextColor={colors.textSecondary}
+          placeholder={placeholder ?? '0'}
+          placeholderTextColor={colors.textTertiary}
           keyboardType={keyboardType}
+          returnKeyType="done"
+          selectTextOnFocus
           autoCapitalize="none"
           autoCorrect={false}
         />
       </View>
-      {error && <Text style={errorStyle}>{error}</Text>}
+      {error && (
+        <Text style={[styles.error, { color: colors.error }]}>{error}</Text>
+      )}
     </View>
   );
 };
@@ -97,21 +90,24 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: FontSizes.sm,
-    fontWeight: '500',
+    fontWeight: FontWeights.medium,
     marginBottom: Spacing.xs,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   inputContainer: {
-    borderWidth: 1,
-    borderRadius: BorderRadius.md,
+    borderWidth: 1.5,
+    borderRadius: BorderRadius.lg,
     paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    minHeight: 48,
+    paddingVertical: Platform.OS === 'ios' ? Spacing.md : Spacing.sm,
+    minHeight: 56,
     justifyContent: 'center',
   },
   textInput: {
-    fontSize: FontSizes.md,
-    flex: 1,
+    fontSize: FontSizes.xxl,
+    fontWeight: FontWeights.semibold,
     padding: 0,
+    textAlign: 'center',
   },
   error: {
     fontSize: FontSizes.sm,

@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  View, 
-  StyleSheet, 
-  SafeAreaView, 
-  ScrollView, 
+import {
+  View,
+  StyleSheet,
+  SafeAreaView,
+  ScrollView,
   TouchableOpacity,
   StatusBar,
-  Animated
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import * as ExpoClipboard from 'expo-clipboard';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { ThemedText } from '@/components/themed-text';
 import { AppInput } from '../src/components/common/AppInput';
@@ -17,36 +18,36 @@ import { AppCard } from '../src/components/common/AppCard';
 import { Icon, UIIcons } from '../src/components/common/Icon';
 import { getCategoryById } from '../src/constants/units';
 import { convert, formatResult } from '../src/utils/converters';
-import { 
-  Colors, 
-  Spacing, 
-  FontSizes, 
-  FontWeights, 
+import {
+  Colors,
+  Spacing,
+  FontSizes,
+  FontWeights,
   BorderRadius,
   Shadows,
-  getCategoryColor 
+  getCategoryColor
 } from '../src/constants/colors';
-import { responsiveSpacing } from '../src/constants/responsive';
+import { responsiveSpacing, isSmallDevice } from '../src/constants/responsive';
 import { UnitCategory } from '../src/types/unit.types';
-import { Stack } from 'expo-router';
+import { Stack, useLocalSearchParams } from 'expo-router';
 
 export default function ConverterScreen() {
   const { categoryId, categoryName } = useLocalSearchParams<{
     categoryId: UnitCategory;
     categoryName: string;
   }>();
-  const router = useRouter();
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
-  
+
   const category = getCategoryById(categoryId!);
   const categoryColor = getCategoryColor(categoryId!, colorScheme ?? 'light');
-  
+
   const [inputValue, setInputValue] = useState('');
   const [fromUnit, setFromUnit] = useState(category?.units[0]?.id || '');
   const [toUnit, setToUnit] = useState(category?.units[1]?.id || category?.units[0]?.id || '');
   const [result, setResult] = useState('');
   const [error, setError] = useState('');
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (inputValue && category) {
@@ -76,22 +77,21 @@ export default function ConverterScreen() {
     setToUnit(temp);
   };
 
+  const handleCopy = async () => {
+    if (result) {
+      await ExpoClipboard.setStringAsync(result);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
   if (!category) {
     return (
       <>
         <Stack.Screen options={{ title: 'Error' }} />
-        <StatusBar 
-          barStyle={colorScheme === 'dark' ? 'light-content' : 'dark-content'}
-          backgroundColor={colors.background}
-        />
         <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
           <View style={styles.errorContainer}>
-            <Icon
-              family="MaterialCommunityIcons"
-              name="alert-circle-outline"
-              size={48}
-              color={colors.error}
-            />
+            <Icon family="MaterialCommunityIcons" name="alert-circle-outline" size={48} color={colors.error} />
             <ThemedText style={[styles.errorText, { color: colors.error }]}>
               Category not found
             </ThemedText>
@@ -106,159 +106,166 @@ export default function ConverterScreen() {
     value: unit.id,
   }));
 
-  const selectedFromUnit = category.units.find(unit => unit.id === fromUnit);
-  const selectedToUnit = category.units.find(unit => unit.id === toUnit);
+  const selectedFromUnit = category.units.find(u => u.id === fromUnit);
+  const selectedToUnit = category.units.find(u => u.id === toUnit);
+  const small = isSmallDevice();
 
   return (
     <>
-      <Stack.Screen 
-        options={{ 
+      <Stack.Screen
+        options={{
           title: `${categoryName} Converter`,
-          headerStyle: {
-            backgroundColor: categoryColor,
-          },
+          headerStyle: { backgroundColor: categoryColor },
           headerTintColor: '#FFFFFF',
-          headerTitleStyle: {
-            fontWeight: FontWeights.semibold,
-            fontSize: FontSizes.lg,
-          },
-        }} 
+          headerTitleStyle: { fontWeight: FontWeights.semibold, fontSize: FontSizes.lg },
+        }}
       />
-      <StatusBar 
-        barStyle="light-content"
-        backgroundColor={categoryColor}
-      />
+      <StatusBar barStyle="light-content" backgroundColor={categoryColor} />
+
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-        <ScrollView 
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
+        <KeyboardAvoidingView
+          style={styles.flex}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
         >
-          {/* Header Section */}
-          <View style={[styles.headerSection, { backgroundColor: categoryColor }]}>
-            <View style={styles.headerContent}>
+          <ScrollView
+            style={styles.flex}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            {/* Compact color band */}
+            <View style={[
+              styles.colorBand,
+              { backgroundColor: categoryColor },
+              small && styles.colorBandSmall,
+            ]}>
               <Icon
                 family={category.icon.family}
                 name={category.icon.name}
-                size={responsiveSpacing(40)}
-                color="#FFFFFF"
+                size={responsiveSpacing(26)}
+                color="rgba(255,255,255,0.9)"
               />
-              <ThemedText style={styles.headerTitle}>
+              <ThemedText style={styles.bandText}>
                 {category.description}
               </ThemedText>
             </View>
-          </View>
 
-          <View style={styles.content}>
-            {/* Input Section */}
-            <AppCard variant="elevated" style={styles.inputCard}>
+            <View style={styles.content}>
+              {/* Input */}
               <AppInput
                 label="Enter Value"
                 value={inputValue}
                 onChangeText={setInputValue}
-                keyboardType="numeric"
+                keyboardType="decimal-pad"
                 placeholder="0"
-                style={styles.input}
               />
-            </AppCard>
-            
-            {/* Units Selection */}
-            <View style={styles.unitsSection}>
-              <View style={styles.unitSelector}>
-                <AppDropdown
-                  label="From"
-                  items={unitOptions}
-                  selectedValue={fromUnit}
-                  onValueChange={setFromUnit}
-                />
+
+              {/* Unit selectors + swap */}
+              <View style={styles.unitsRow}>
+                <View style={styles.unitSelector}>
+                  <AppDropdown
+                    label="From"
+                    items={unitOptions}
+                    selectedValue={fromUnit}
+                    onValueChange={setFromUnit}
+                  />
+                </View>
+
+                <TouchableOpacity
+                  style={[styles.swapButton, { backgroundColor: categoryColor }, Shadows.sm]}
+                  onPress={handleSwapUnits}
+                  activeOpacity={0.8}
+                >
+                  <Icon
+                    family={UIIcons.swap.family}
+                    name={UIIcons.swap.name}
+                    size={20}
+                    color="#FFFFFF"
+                  />
+                </TouchableOpacity>
+
+                <View style={styles.unitSelector}>
+                  <AppDropdown
+                    label="To"
+                    items={unitOptions}
+                    selectedValue={toUnit}
+                    onValueChange={setToUnit}
+                  />
+                </View>
               </View>
-              
-              {/* Swap Button */}
-              <TouchableOpacity
-                style={[styles.swapButton, { backgroundColor: categoryColor }]}
-                onPress={handleSwapUnits}
-                activeOpacity={0.8}
+
+              {/* Result card */}
+              <AppCard
+                variant="elevated"
+                style={[styles.resultCard, { borderColor: categoryColor + '40' }]}
               >
-                <Icon
-                  family={UIIcons.swap.family}
-                  name={UIIcons.swap.name}
-                  size={20}
-                  color="#FFFFFF"
-                />
-              </TouchableOpacity>
-              
-              <View style={styles.unitSelector}>
-                <AppDropdown
-                  label="To"
-                  items={unitOptions}
-                  selectedValue={toUnit}
-                  onValueChange={setToUnit}
-                />
-              </View>
-            </View>
-            
-            {/* Result Section */}
-            <AppCard variant="elevated" style={[styles.resultCard, { borderColor: `${categoryColor}30` }]}>
-              <View style={styles.resultContainer}>
                 <View style={styles.resultHeader}>
                   <ThemedText style={[styles.resultLabel, { color: colors.textSecondary }]}>
                     Result
                   </ThemedText>
                   {result && !error && (
-                    <TouchableOpacity style={styles.copyButton}>
+                    <TouchableOpacity
+                      onPress={handleCopy}
+                      style={styles.copyButton}
+                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    >
                       <Icon
-                        family={UIIcons.copy.family}
-                        name={UIIcons.copy.name}
-                        size={16}
-                        color={colors.textSecondary}
+                        family={copied ? 'MaterialCommunityIcons' : UIIcons.copy.family}
+                        name={copied ? 'check' : UIIcons.copy.name}
+                        size={18}
+                        color={copied ? colors.success : colors.textSecondary}
                       />
                     </TouchableOpacity>
                   )}
                 </View>
-                
+
                 {error ? (
-                  <View style={styles.errorResultContainer}>
-                    <Icon
-                      family="MaterialCommunityIcons"
-                      name="alert-circle"
-                      size={24}
-                      color={colors.error}
-                    />
+                  <View style={styles.errorRow}>
+                    <Icon family="MaterialCommunityIcons" name="alert-circle" size={20} color={colors.error} />
                     <ThemedText style={[styles.errorText, { color: colors.error }]}>
                       {error}
                     </ThemedText>
                   </View>
                 ) : (
-                  <View style={styles.successResultContainer}>
-                    <ThemedText style={[styles.resultValue, { color: colors.text }]}>
-                      {result || '0'}
+                  <View style={styles.resultValueRow}>
+                    <ThemedText
+                      style={[styles.resultValue, { color: colors.text }]}
+                      numberOfLines={1}
+                      adjustsFontSizeToFit
+                      minimumFontScale={0.5}
+                    >
+                      {result || '—'}
                     </ThemedText>
-                    <ThemedText style={[styles.resultUnit, { color: categoryColor }]}>
-                      {selectedToUnit?.symbol || ''}
-                    </ThemedText>
+                    {result ? (
+                      <ThemedText style={[styles.resultUnit, { color: categoryColor }]}>
+                        {selectedToUnit?.symbol}
+                      </ThemedText>
+                    ) : null}
                   </View>
                 )}
-              </View>
-            </AppCard>
+              </AppCard>
 
-            {/* Conversion Summary */}
-            {inputValue && !error && result && (
-              <AppCard style={[styles.summaryCard, { backgroundColor: `${categoryColor}10` }]}>
-                <View style={styles.summaryContent}>
+              {/* Conversion summary badge */}
+              {inputValue && !error && result && (
+                <View style={[
+                  styles.summaryBadge,
+                  { backgroundColor: categoryColor + '12', borderColor: categoryColor + '30' },
+                ]}>
                   <ThemedText style={[styles.summaryText, { color: colors.text }]}>
                     <ThemedText style={{ fontWeight: FontWeights.semibold }}>
                       {inputValue} {selectedFromUnit?.symbol}
                     </ThemedText>
-                    <ThemedText style={{ color: colors.textSecondary }}> equals </ThemedText>
+                    <ThemedText style={{ color: colors.textSecondary }}>{' = '}</ThemedText>
                     <ThemedText style={{ fontWeight: FontWeights.semibold, color: categoryColor }}>
                       {result} {selectedToUnit?.symbol}
                     </ThemedText>
                   </ThemedText>
                 </View>
-              </AppCard>
-            )}
-          </View>
-        </ScrollView>
+              )}
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
       </SafeAreaView>
     </>
   );
@@ -268,40 +275,33 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  scrollView: {
+  flex: {
     flex: 1,
   },
   scrollContent: {
     flexGrow: 1,
   },
-  headerSection: {
-    paddingVertical: Spacing.xl,
+  colorBand: {
+    paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.lg,
-    marginBottom: Spacing.lg,
-  },
-  headerContent: {
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: Spacing.sm,
   },
-  headerTitle: {
-    fontSize: FontSizes.md,
+  colorBandSmall: {
+    paddingVertical: Spacing.sm,
+  },
+  bandText: {
+    color: 'rgba(255,255,255,0.9)',
+    fontSize: FontSizes.sm,
     fontWeight: FontWeights.medium,
-    color: '#FFFFFF',
-    textAlign: 'center',
-    marginTop: Spacing.sm,
-    opacity: 0.9,
+    flex: 1,
   },
   content: {
-    paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.xl,
-    gap: Spacing.lg,
+    padding: Spacing.lg,
+    gap: Spacing.md,
   },
-  inputCard: {
-    padding: 0,
-  },
-  input: {
-    marginBottom: 0,
-  },
-  unitsSection: {
+  unitsRow: {
     flexDirection: 'row',
     alignItems: 'flex-end',
     gap: Spacing.sm,
@@ -316,66 +316,68 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: Spacing.md,
-    ...Shadows.sm,
   },
   resultCard: {
-    borderWidth: 2,
-  },
-  resultContainer: {
-    padding: Spacing.xl,
+    borderWidth: 1.5,
+    padding: Spacing.lg,
+    gap: Spacing.sm,
   },
   resultHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: Spacing.lg,
   },
   resultLabel: {
-    fontSize: FontSizes.md,
+    fontSize: FontSizes.sm,
     fontWeight: FontWeights.medium,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   copyButton: {
     padding: Spacing.xs,
   },
-  successResultContainer: {
+  resultValueRow: {
     alignItems: 'center',
+    paddingTop: Spacing.sm,
+    gap: Spacing.xs,
   },
   resultValue: {
     fontSize: FontSizes.xxxxl,
     fontWeight: FontWeights.bold,
     textAlign: 'center',
-    marginBottom: Spacing.xs,
   },
   resultUnit: {
     fontSize: FontSizes.xl,
     fontWeight: FontWeights.semibold,
   },
-  errorResultContainer: {
+  errorRow: {
+    flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.sm,
+    paddingTop: Spacing.sm,
   },
   errorText: {
     fontSize: FontSizes.md,
-    textAlign: 'center',
     fontWeight: FontWeights.medium,
+    flex: 1,
   },
   errorContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: Spacing.xl,
     gap: Spacing.lg,
+    padding: Spacing.xl,
   },
-  summaryCard: {
+  summaryBadge: {
+    borderWidth: 1,
     borderRadius: BorderRadius.lg,
-  },
-  summaryContent: {
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
     alignItems: 'center',
-    padding: Spacing.lg,
   },
   summaryText: {
     fontSize: FontSizes.md,
     textAlign: 'center',
-    lineHeight: FontSizes.md * 1.4,
+    lineHeight: FontSizes.md * 1.5,
   },
 });

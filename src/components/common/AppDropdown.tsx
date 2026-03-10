@@ -1,5 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Modal, FlatList, StyleSheet, ViewStyle } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Modal,
+  FlatList,
+  StyleSheet,
+  ViewStyle,
+  Platform,
+} from 'react-native';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Icon, UIIcons } from './Icon';
 import { Colors, Spacing, BorderRadius, FontSizes, FontWeights, Shadows } from '../../constants/colors';
@@ -29,127 +38,81 @@ export const AppDropdown: React.FC<AppDropdownProps> = ({
   const [modalVisible, setModalVisible] = useState(false);
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
-  
+
   const selectedItem = items.find(item => item.value === selectedValue);
-
-  const dropdownStyle = [
-    styles.dropdown,
-    {
-      borderColor: colors.border,
-      backgroundColor: colors.background,
-    },
-  ];
-
-  const labelStyle = [
-    styles.label,
-    {
-      color: colors.text,
-    },
-  ];
-
-  const selectedTextStyle = [
-    styles.selectedText,
-    {
-      color: selectedItem ? colors.text : colors.textSecondary,
-    },
-  ];
-
-  const modalContentStyle = [
-    styles.modalContent,
-    {
-      backgroundColor: colors.surface,
-    },
-    Shadows.lg,
-  ];
-
-  const modalHeaderStyle = [
-    styles.modalHeader,
-    {
-      borderBottomColor: colors.border,
-    },
-  ];
-
-  const modalTitleStyle = [
-    styles.modalTitle,
-    {
-      color: colors.text,
-    },
-  ];
-
-  const itemStyle = [
-    styles.item,
-    {
-      borderBottomColor: colors.border,
-    },
-  ];
-
-  const itemTextStyle = [
-    styles.itemText,
-    {
-      color: colors.text,
-    },
-  ];
-
-  const selectedItemStyle = [
-    styles.selectedItem,
-    {
-      backgroundColor: colors.primary + '20', // 20% opacity
-    },
-  ];
 
   return (
     <View style={[styles.container, style]}>
-      {label && <Text style={labelStyle}>{label}</Text>}
-      
+      {label && (
+        <Text style={[styles.label, { color: colors.textSecondary }]}>
+          {label}
+        </Text>
+      )}
+
       <TouchableOpacity
-        style={dropdownStyle}
+        style={[styles.dropdown, { borderColor: colors.border, backgroundColor: colors.backgroundSecondary }]}
         onPress={() => setModalVisible(true)}
         activeOpacity={0.7}
       >
-        <Text style={selectedTextStyle}>
+        <Text style={[styles.selectedText, { color: selectedItem ? colors.text : colors.textTertiary }]} numberOfLines={1}>
           {selectedItem?.label || placeholder}
         </Text>
         <Icon
           family={UIIcons.chevronDown.family}
           name={UIIcons.chevronDown.name}
-          size={20}
+          size={18}
           color={colors.textSecondary}
         />
       </TouchableOpacity>
 
       <Modal
         visible={modalVisible}
-        transparent={true}
+        transparent
         animationType="slide"
         onRequestClose={() => setModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={modalContentStyle}>
-            <View style={modalHeaderStyle}>
-              <Text style={modalTitleStyle}>
-                {label || 'Select an option'}
-              </Text>
-              <TouchableOpacity 
-                onPress={() => setModalVisible(false)}
-                style={styles.closeButton}
-              >
-                <Icon
-                  family={UIIcons.close.family}
-                  name={UIIcons.close.name}
-                  size={24}
-                  color={colors.textSecondary}
-                />
-              </TouchableOpacity>
-            </View>
-            
-            <FlatList
-              data={items}
-              keyExtractor={(item) => item.value}
-              renderItem={({ item }) => (
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setModalVisible(false)}
+        />
+        <View style={[styles.modalContent, { backgroundColor: colors.surface }, Shadows.xl]}>
+          {/* Drag Handle */}
+          <View style={styles.dragHandleRow}>
+            <View style={[styles.dragHandle, { backgroundColor: colors.borderSecondary }]} />
+          </View>
+
+          {/* Header */}
+          <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>
+              {label || 'Select an option'}
+            </Text>
+            <TouchableOpacity
+              onPress={() => setModalVisible(false)}
+              style={styles.closeButton}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Icon
+                family={UIIcons.close.family}
+                name={UIIcons.close.name}
+                size={22}
+                color={colors.textSecondary}
+              />
+            </TouchableOpacity>
+          </View>
+
+          {/* List */}
+          <FlatList
+            data={items}
+            keyExtractor={(item) => item.value}
+            renderItem={({ item }) => {
+              const isSelected = item.value === selectedValue;
+              return (
                 <TouchableOpacity
                   style={[
-                    itemStyle,
-                    item.value === selectedValue && selectedItemStyle,
+                    styles.item,
+                    { borderBottomColor: colors.border },
+                    isSelected && { backgroundColor: colors.primary + '15' },
                   ]}
                   onPress={() => {
                     onValueChange(item.value);
@@ -157,8 +120,14 @@ export const AppDropdown: React.FC<AppDropdownProps> = ({
                   }}
                   activeOpacity={0.7}
                 >
-                  <Text style={itemTextStyle}>{item.label}</Text>
-                  {item.value === selectedValue && (
+                  <Text style={[
+                    styles.itemText,
+                    { color: isSelected ? colors.primary : colors.text },
+                    isSelected && { fontWeight: FontWeights.semibold },
+                  ]}>
+                    {item.label}
+                  </Text>
+                  {isSelected && (
                     <Icon
                       family={UIIcons.checkmark.family}
                       name={UIIcons.checkmark.name}
@@ -167,10 +136,14 @@ export const AppDropdown: React.FC<AppDropdownProps> = ({
                     />
                   )}
                 </TouchableOpacity>
-              )}
-              style={styles.list}
-            />
-          </View>
+              );
+            }}
+            style={styles.list}
+            showsVerticalScrollIndicator={false}
+          />
+
+          {/* Safe area bottom padding */}
+          <View style={{ height: Platform.OS === 'ios' ? 24 : 16 }} />
         </View>
       </Modal>
     </View>
@@ -183,49 +156,63 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: FontSizes.sm,
-    fontWeight: '500',
+    fontWeight: FontWeights.medium,
     marginBottom: Spacing.xs,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   dropdown: {
-    borderWidth: 1,
-    borderRadius: BorderRadius.md,
+    borderWidth: 1.5,
+    borderRadius: BorderRadius.lg,
     paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.md,
+    paddingVertical: Spacing.sm,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    minHeight: 48,
+    minHeight: 52,
   },
   selectedText: {
     fontSize: FontSizes.md,
+    fontWeight: FontWeights.medium,
     flex: 1,
+    marginRight: Spacing.sm,
   },
   modalOverlay: {
     flex: 1,
-    justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
   },
   modalContent: {
-    borderTopLeftRadius: BorderRadius.xl,
-    borderTopRightRadius: BorderRadius.xl,
-    maxHeight: '80%',
+    borderTopLeftRadius: BorderRadius.xxl,
+    borderTopRightRadius: BorderRadius.xxl,
+    maxHeight: '70%',
+  },
+  dragHandleRow: {
+    alignItems: 'center',
+    paddingTop: Spacing.sm,
+    paddingBottom: Spacing.xs,
+  },
+  dragHandle: {
+    width: 36,
+    height: 4,
+    borderRadius: BorderRadius.full,
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: Spacing.lg,
-    borderBottomWidth: 1,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
   },
   modalTitle: {
     fontSize: FontSizes.lg,
-    fontWeight: '600',
+    fontWeight: FontWeights.semibold,
   },
   closeButton: {
     padding: Spacing.xs,
   },
   list: {
-    maxHeight: 400,
+    maxHeight: 320,
   },
   item: {
     flexDirection: 'row',
@@ -234,9 +221,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
     borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  selectedItem: {
-    // backgroundColor will be set dynamically
   },
   itemText: {
     fontSize: FontSizes.md,
