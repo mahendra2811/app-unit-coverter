@@ -129,7 +129,12 @@ export default function ConverterScreen() {
                 </View>
               ) : (
                 <View style={styles.successResultContainer}>
-                  <ThemedText style={styles.resultValue}>
+                  <ThemedText
+                    style={styles.resultValue}
+                    adjustsFontSizeToFit={true}
+                    numberOfLines={1}
+                    minimumFontScale={0.5}
+                  >
                     {result || '0'}
                   </ThemedText>
                   <ThemedText style={[styles.resultUnit, { color: colors.textSecondary }]}>
@@ -183,25 +188,35 @@ const styles = StyleSheet.create({
     marginTop: Spacing.md,
   },
   resultContainer: {
+    width: '100%',
     alignItems: 'center',
-    padding: Spacing.lg,
+    paddingVertical: Spacing.lg,
+    paddingHorizontal: Spacing.md,
   },
   resultLabel: {
     fontSize: FontSizes.md,
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.sm,
+    textAlign: 'center',
   },
   successResultContainer: {
+    width: '100%',
     alignItems: 'center',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: Spacing.xs,
   },
   resultValue: {
     fontSize: FontSizes.xxxl,
     fontWeight: '700',
     textAlign: 'center',
-    marginBottom: Spacing.xs,
+    flexShrink: 1,
+    maxWidth: '90%',
   },
   resultUnit: {
     fontSize: FontSizes.lg,
     fontWeight: '500',
+    flexShrink: 0,
   },
   errorResultContainer: {
     alignItems: 'center',
