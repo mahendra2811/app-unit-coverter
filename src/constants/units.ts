@@ -25,6 +25,37 @@ export const CONVERSION_CATEGORIES: ConversionCategory[] = [
       { id: 'kg', name: 'Kilogram', symbol: 'kg', category: 'weight' },
     ],
   },
+  {
+    id: 'temperature',
+    name: 'Temperature',
+    icon: CategoryIcons.temperature,
+    description: 'Convert between units of temperature',
+    units: [
+      { id: 'C', name: 'Celsius', symbol: '°C', category: 'temperature' },
+      { id: 'F', name: 'Fahrenheit', symbol: '°F', category: 'temperature' },
+      { id: 'K', name: 'Kelvin', symbol: 'K', category: 'temperature' },
+    ],
+  },
+  {
+    id: 'area',
+    name: 'Area',
+    icon: CategoryIcons.area,
+    description: 'Convert between units of area',
+    units: [
+      { id: 'm²', name: 'Square Meter', symbol: 'm²', category: 'area' },
+      { id: 'km²', name: 'Square Kilometer', symbol: 'km²', category: 'area' },
+    ],
+  },
+  {
+    id: 'volume',
+    name: 'Volume',
+    icon: CategoryIcons.volume,
+    description: 'Convert between units of volume',
+    units: [
+      { id: 'ml', name: 'Milliliter', symbol: 'ml', category: 'volume' },
+      { id: 'l', name: 'Liter', symbol: 'l', category: 'volume' },
+    ],
+  },
 ];
 
 export const getCategoryById = (id: string) => {
